@@ -706,6 +706,21 @@ textarea { resize: vertical; min-height: 64px; }
             <div class="form-group"><label for="settingsKey">API Key <span class="count">（可选）</span></label><input type="password" id="settingsKey" placeholder="输入 API Key" autocomplete="off"><p class="form-hint">配置后将以 X-Stow-Key 头随请求发送。</p></div>
             <button type="button" class="btn btn-primary" onclick="saveSettings()">保存设置</button>
           </div></div>
+
+          <div class="card settings-card detail-card-spacing"><div class="card-header"><span>数据导入/导出</span><span class="status-pill">JSON 格式</span></div><div class="card-body">
+            <p class="form-hint" style="margin-bottom:12px">导出全部数据为 JSON 文件，或从备份文件恢复。</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="btn btn-outline" onclick="exportData()">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                导出数据
+              </button>
+              <label class="btn btn-outline" style="cursor:pointer">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                导入数据
+                <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+              </label>
+            </div>
+          </div></div>
         </section>
       </div>
     </div>
@@ -911,8 +926,8 @@ function populateFilterSelects() {
   if (!catSel) return;
   var curCat = catSel.value;
   var curLoc = locSel.value;
-  catSel.innerHTML = '<option value="">全部分类</option>' + categories.map(function(c) { return '<option value="' + esc(c.name) + '">' + esc(c.name) + '</option>'; }).join('');
-  locSel.innerHTML = '<option value="">全部位置</option>' + locations.map(function(l) { return '<option value="' + esc(l.name) + '">' + esc(l.name) + '</option>'; }).join('');
+  catSel.innerHTML = '<option value="">全部分类</option>' + categories.map(function(c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('');
+  locSel.innerHTML = '<option value="">全部位置</option>' + locations.map(function(l) { return '<option value="' + l.id + '">' + esc(l.name) + '</option>'; }).join('');
   catSel.value = curCat;
   locSel.value = curLoc;
 }
@@ -930,8 +945,8 @@ function renderItems() {
   var filterLoc = document.getElementById('filterLocation').value;
   var filtered = items;
   if (q) filtered = filtered.filter(function(i) { return i.name.toLowerCase().includes(q); });
-  if (filterCat) filtered = filtered.filter(function(i) { return i.category === filterCat; });
-  if (filterLoc) filtered = filtered.filter(function(i) { return i.location === filterLoc; });
+  if (filterCat) filtered = filtered.filter(function(i) { return i.category_id == filterCat; });
+  if (filterLoc) filtered = filtered.filter(function(i) { return i.location_id == filterLoc; });
   var tbody = document.getElementById('itemTableBody');
   var empty = document.getElementById('emptyState');
   document.getElementById('itemCount').textContent = '显示 ' + filtered.length + ' / 共 ' + items.length + ' 项';
@@ -963,8 +978,8 @@ function renderItems() {
 function populateSelects() {
   var catSel = document.getElementById('formCategory');
   var locSel = document.getElementById('formLocation');
-  catSel.innerHTML = '<option value="">-- 选择分类 --</option>' + categories.map(function(c) { return '<option value="' + esc(c.name) + '">' + esc(c.name) + '</option>'; }).join('');
-  locSel.innerHTML = '<option value="">-- 选择位置 --</option>' + locations.map(function(l) { return '<option value="' + esc(l.name) + '">' + esc(l.name) + '</option>'; }).join('');
+  catSel.innerHTML = '<option value="">-- 选择分类 --</option>' + categories.map(function(c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('');
+  locSel.innerHTML = '<option value="">-- 选择位置 --</option>' + locations.map(function(l) { return '<option value="' + l.id + '">' + esc(l.name) + '</option>'; }).join('');
 }
 
 function showCreateModal() {
@@ -984,18 +999,20 @@ function showEditModal(item) {
   document.getElementById('createBtn').textContent = '更新';
   document.getElementById('editItemId').value = item.id;
   document.getElementById('formName').value = item.name || '';
-  document.getElementById('formCategory').value = item.category || '';
-  document.getElementById('formLocation').value = item.location || '';
+  document.getElementById('formCategory').value = item.category_id || '';
+  document.getElementById('formLocation').value = item.location_id || '';
   openModal('createModal');
 }
 
 function submitItem() {
   var id = document.getElementById('editItemId').value;
+  var catVal = document.getElementById('formCategory').value;
+  var locVal = document.getElementById('formLocation').value;
   var body = {
     name: document.getElementById('formName').value.trim(),
-    category: document.getElementById('formCategory').value.trim(),
-    location: document.getElementById('formLocation').value.trim(),
   };
+  if (catVal) body.category_id = parseInt(catVal);
+  if (locVal) body.location_id = parseInt(locVal);
   if (!body.name) { toast('请输入物品名称', 'error'); return; }
   var btn = document.getElementById('createBtn');
   btn.disabled = true;
@@ -1413,6 +1430,8 @@ function submitName() {
     closeModal('nameModal');
     if (kind === 'categories') loadCategories();
     else loadLocations();
+    loadItems();
+    loadLocationItems();
   }).catch(function(e) { toast('操作失败: ' + e.message, 'error'); })
     .finally(function() { btn.disabled = false; });
 }
@@ -1436,6 +1455,50 @@ function saveSettings() {
   localStorage.setItem('stow_api_key', key);
   toast('设置已保存');
   checkHealth();
+}
+
+function exportData() {
+  api('/api/export').then(function(data) {
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'stow-export-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('数据已导出');
+  }).catch(function(e) { toast('导出失败: ' + e.message, 'error'); });
+}
+
+function importData(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data.version || typeof data.version !== 'number') {
+        toast('无效的导入文件：缺少 version 字段', 'error');
+        return;
+      }
+      api('/api/import', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }).then(function() {
+        toast('数据已导入');
+        document.getElementById('importFileInput').value = '';
+        loadItems();
+        loadLocationItems();
+        loadCategories();
+        loadLocations();
+      }).catch(function(e) { toast('导入失败: ' + e.message, 'error'); });
+    } catch (err) {
+      toast('文件解析失败: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
 }
 
 document.getElementById('settingsKey').addEventListener('focus', function() {
