@@ -6,494 +6,465 @@
 <title>Stow Core - 库存管理</title>
 <style>
   :root {
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --danger: #dc2626;
-    --danger-hover: #b91c1c;
-    --success: #16a34a;
-    --success-hover: #15803d;
-    --warning: #d97706;
-    --bg: #f8fafc;
+    --brand-700: #12364a;
+    --brand-600: #174b61;
+    --brand-100: #dcecf0;
+    --accent: #0f8a72;
+    --accent-hover: #0b6f5d;
+    --accent-soft: #dcf5ee;
+    --danger: #c43d4b;
+    --danger-hover: #a72f3c;
+    --danger-soft: #fce8ea;
+    --warning: #b66b13;
+    --warning-soft: #fff1d6;
+    --success: #16805f;
+    --success-soft: #def4eb;
+    --bg: #f3f6f7;
     --surface: #ffffff;
-    --border: #e2e8f0;
-    --text: #1e293b;
-    --text-secondary: #64748b;
+    --surface-subtle: #f7f9fa;
+    --border: #dbe3e6;
+    --border-strong: #c8d4d8;
+    --text: #18313d;
+    --text-secondary: #627681;
+    --text-soft: #87979f;
+    --shadow-sm: 0 1px 2px rgba(18, 54, 74, .05), 0 6px 20px rgba(18, 54, 74, .04);
+    --shadow-lg: 0 24px 70px rgba(18, 54, 74, .18);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --focus-ring: 0 0 0 3px rgba(15, 138, 114, .2);
+    --content-max: 1240px;
+    --primary: var(--accent);
+    --primary-hover: var(--accent-hover);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
+    min-width: 320px; min-height: 100vh;
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
   }
+  button, input, select, textarea { font: inherit; }
+  button { color: inherit; }
+  .icon { width: 18px; height: 18px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-lg { width: 22px; height: 22px; }
   .header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    height: 72px; padding: 0 24px; background: rgba(255,255,255,.94);
+    border-bottom: 1px solid var(--border); display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 30;
+    backdrop-filter: blur(14px);
   }
-  .header h1 { font-size: 20px; font-weight: 600; }
+  .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+  .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; color: #fff; background: var(--brand-700); box-shadow: 0 7px 16px rgba(18,54,74,.18); }
+  .brand-copy { min-width: 0; }
+  .brand-title { font-size: 17px; line-height: 1.2; font-weight: 750; letter-spacing: -.01em; }
+  .brand-subtitle { margin-top: 2px; color: var(--text-secondary); font-size: 11px; letter-spacing: .04em; }
   .header-actions { display: flex; gap: 8px; align-items: center; }
   .health-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 12px; border-radius: 999px; font-size: 13px;
-    background: #fee2e2; color: var(--danger);
+    display: inline-flex; align-items: center; gap: 8px; min-height: 34px;
+    padding: 5px 11px; border: 1px solid #f0c7cd; border-radius: 999px;
+    background: var(--danger-soft); color: var(--danger); font-size: 12px; font-weight: 650;
   }
-  .health-badge.ok { background: #dcfce7; color: var(--success); }
-  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-  .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-  .search-box { flex: 1; min-width: 200px; }
-  .search-box input {
-    width: 100%; padding: 8px 14px; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 14px; outline: none;
-    transition: border-color .15s;
+  .health-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(196,61,75,.12); }
+  .health-badge.checking { color: var(--warning); background: var(--warning-soft); border-color: #f1d39c; }
+  .health-badge.ok { color: var(--success); background: var(--success-soft); border-color: #b8e3d4; }
+  .health-badge.ok::before { box-shadow: 0 0 0 3px rgba(22,128,95,.12); }
+  .primary-nav { background: var(--surface); border-bottom: 1px solid var(--border); }
+  .primary-tabs { max-width: var(--content-max); margin: 0 auto; padding: 8px 24px; display: flex; gap: 6px; }
+  .tab {
+    border: 0; background: transparent; cursor: pointer; color: var(--text-secondary);
+    transition: color .16s ease, background .16s ease, border-color .16s ease;
   }
-  .search-box input:focus { border-color: var(--primary); }
-  .toolbar select {
-    padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 14px; outline: none; background: var(--surface); cursor: pointer;
-    min-width: 120px;
-  }
-  .toolbar select:focus { border-color: var(--primary); }
+  .primary-tabs .tab { min-height: 36px; padding: 7px 15px; border-radius: 9px; font-size: 13px; font-weight: 650; }
+  .primary-tabs .tab:hover { color: var(--text); background: var(--surface-subtle); }
+  .primary-tabs .tab.active { color: var(--brand-700); background: var(--brand-100); }
+  :focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .container { max-width: var(--content-max); margin: 0 auto; padding: 30px 24px 48px; }
+  .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+  .page-eyebrow { margin-bottom: 5px; color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+  .page-heading h1, .page-heading h2 { color: var(--brand-700); font-size: 25px; line-height: 1.25; letter-spacing: -.025em; }
+  .page-description { max-width: 620px; margin-top: 7px; color: var(--text-secondary); font-size: 13px; }
+  .page-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .overview-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .metric-card { min-height: 116px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
+  .metric-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--text-secondary); font-size: 12px; font-weight: 650; }
+  .metric-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; color: var(--accent); background: var(--accent-soft); }
+  .metric-value { margin-top: 13px; color: var(--brand-700); font-size: 28px; line-height: 1; font-weight: 760; font-variant-numeric: tabular-nums; }
+  .metric-card.alert .metric-icon, .metric-card.alert .metric-value { color: var(--danger); }
+  .metric-card.alert .metric-icon { background: var(--danger-soft); }
+  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 4px 0 12px; }
+  .section-heading h2 { color: var(--brand-700); font-size: 16px; }
+  .section-heading p { color: var(--text-secondary); font-size: 12px; }
   .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border: none; border-radius: 8px;
-    font-size: 14px; font-weight: 500; cursor: pointer;
-    transition: background .15s, opacity .15s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    min-height: 40px; padding: 8px 14px; border: 1px solid transparent;
+    border-radius: var(--radius-sm); font-size: 13px; font-weight: 650; cursor: pointer;
+    transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
   }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-primary { background: var(--primary); color: #fff; }
-  .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
-  .btn-danger { background: var(--danger); color: #fff; }
-  .btn-danger:hover:not(:disabled) { background: var(--danger-hover); }
-  .btn-success { background: var(--success); color: #fff; }
-  .btn-success:hover:not(:disabled) { background: var(--success-hover); }
-  .btn-warning { background: var(--warning); color: #fff; }
-  .btn-warning:hover:not(:disabled) { background: #b45309; }
-  .btn-outline {
-    background: transparent; border: 1px solid var(--border); color: var(--text);
+  .btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .btn:disabled { opacity: .46; cursor: not-allowed; transform: none; }
+  .btn-primary, .btn-success { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled), .btn-success:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-warning { background: var(--warning-soft); border-color: #efd199; color: #8c510d; }
+  .btn-warning:hover:not(:disabled) { background: #f9e4b9; }
+  .btn-danger { background: transparent; border-color: #efc5ca; color: var(--danger); }
+  .btn-danger:hover:not(:disabled) { background: var(--danger-soft); border-color: #e5a9b0; }
+  .btn-outline { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
+  .btn-outline:hover:not(:disabled) { background: var(--surface-subtle); border-color: #aebdc2; }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-ghost:hover:not(:disabled) { color: var(--text); background: var(--surface-subtle); }
+  .btn-sm { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
+  .card-header { min-height: 56px; padding: 13px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 700; }
+  .card-title-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .card-meta, .count { color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+  .card-body { padding: 20px; }
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-box { position: relative; flex: 1; min-width: 230px; }
+  .search-box .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-soft); pointer-events: none; }
+  .search-box input { padding-left: 39px; }
+  input, textarea, select {
+    width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); outline: none; color: var(--text); background: var(--surface);
+    font-size: 13px; transition: border-color .15s ease, box-shadow .15s ease;
   }
-  .btn-outline:hover { background: var(--bg); }
-  .btn-sm { padding: 4px 10px; font-size: 13px; }
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; overflow: hidden;
-  }
-  .card-header {
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-    font-weight: 600; font-size: 15px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
+  input::placeholder, textarea::placeholder { color: #98a7ad; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: var(--focus-ring); }
+  .toolbar select { width: auto; min-width: 140px; cursor: pointer; }
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
-  th { background: #f8fafc; font-weight: 600; color: var(--text-secondary); font-size: 13px; }
-  tr:hover td { background: #f8fafc; }
-  tr:last-child td { border-bottom: none; }
-  .empty { text-align: center; padding: 48px 24px; color: var(--text-secondary); }
-  .empty p { margin-top: 8px; font-size: 14px; }
-
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.4); z-index: 100;
-    align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .modal-overlay.active { display: flex; }
-  .modal {
-    background: var(--surface); border-radius: 16px;
-    width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,.15);
-  }
-  .modal-header {
-    padding: 20px 24px 0; display: flex; align-items: center;
-    justify-content: space-between;
-  }
-  .modal-header h2 { font-size: 18px; }
-  .modal-close {
-    background: none; border: none; font-size: 24px; cursor: pointer;
-    color: var(--text-secondary); padding: 4px; line-height: 1;
-  }
-  .modal-close:hover { color: var(--text); }
-  .modal-body { padding: 20px 24px; }
-  .modal-footer {
-    padding: 0 24px 20px; display: flex; gap: 8px; justify-content: flex-end;
-  }
-  .form-group { margin-bottom: 16px; }
-  .form-group label {
-    display: block; font-size: 13px; font-weight: 500;
-    color: var(--text-secondary); margin-bottom: 4px;
-  }
-  .form-group input, .form-group textarea, .form-group select {
-    width: 100%; padding: 8px 12px; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 14px; outline: none;
-    transition: border-color .15s;
-  }
-  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-    border-color: var(--primary);
-  }
-  .form-group textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+  th { background: var(--surface-subtle); color: var(--text-secondary); font-size: 11px; font-weight: 750; letter-spacing: .035em; text-transform: uppercase; }
+  tbody tr { transition: background .15s ease; }
+  tbody tr:hover td { background: #f9fbfb; }
+  tbody tr:last-child td { border-bottom: none; }
+  .numeric { text-align: right; font-variant-numeric: tabular-nums; }
+  .item-link { padding: 0; border: 0; background: none; color: var(--brand-700); font-weight: 700; cursor: pointer; text-align: left; }
+  .item-link:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: var(--surface-subtle); color: var(--text-secondary); font-size: 11px; font-weight: 650; white-space: nowrap; }
+  .status-pill.expired { background: var(--danger-soft); color: var(--danger); }
+  .status-pill.ok { background: var(--success-soft); color: var(--success); }
+  .status-pill.warning { background: var(--warning-soft); color: var(--warning); }
+  .empty, .state-panel { padding: 44px 24px; text-align: center; color: var(--text-secondary); }
+  .state-icon { width: 46px; height: 46px; margin: 0 auto 13px; display: grid; place-items: center; border-radius: 14px; color: var(--accent); background: var(--accent-soft); }
+  .state-title { color: var(--text); font-size: 14px; font-weight: 700; }
+  .state-description, .empty p { max-width: 420px; margin: 5px auto 0; font-size: 12px; }
+  .state-action { margin-top: 14px; }
+  .skeleton { position: relative; overflow: hidden; background: #e8eef0; border-radius: 7px; color: transparent !important; }
+  .skeleton::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent); animation: shimmer 1.35s infinite; }
+  .skeleton-line { height: 12px; margin-top: 10px; }
+  .skeleton-card { min-height: 116px; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .manage-layout { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .manage-tabs { position: sticky; top: 128px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
+  .manage-tabs .tab { width: 100%; min-height: 42px; padding: 9px 11px; display: flex; align-items: center; gap: 9px; border-radius: 8px; font-size: 13px; font-weight: 650; text-align: left; }
+  .manage-tabs .tab:hover { color: var(--text); background: var(--surface-subtle); }
+  .manage-tabs .tab.active { color: var(--accent); background: var(--accent-soft); }
+  .manage-content { min-width: 0; }
+  .resource-actions { display: flex; gap: 8px; align-items: center; }
+  .settings-card { max-width: 680px; }
+  .form-hint { margin-top: 5px; color: var(--text-secondary); font-size: 11px; }
+  .form-group { margin-bottom: 17px; }
+  .form-group label { display: block; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 700; }
   .form-row { display: flex; gap: 12px; }
   .form-row .form-group { flex: 1; }
-
-  .toast-container { position: fixed; top: 16px; right: 16px; z-index: 200; }
-  .toast {
-    padding: 12px 20px; border-radius: 10px; font-size: 14px;
-    margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1);
-    animation: slideIn .3s ease;
-  }
-  .toast-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-  .toast-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-  .item-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }
-  .item-detail-grid .field-label { font-size: 13px; color: var(--text-secondary); }
-  .item-detail-grid .field-value { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
-  .stock-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-  .stock-count { font-size: 28px; font-weight: 700; color: var(--primary); }
-  .movements-table { margin-top: 20px; }
-
-  .tabs { display: flex; border-bottom: 1px solid var(--border); }
-  .primary-tabs { background: var(--surface); padding: 0 max(24px, calc((100% - 1200px) / 2)); }
-  .manage-tabs { margin-bottom: 20px; gap: 4px; }
-  .tab {
-    padding: 10px 20px; cursor: pointer; font-size: 14px; font-weight: 500;
-    color: var(--text-secondary); border-bottom: 2px solid transparent;
-    transition: all .15s;
-  }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-  .health-check { display: flex; align-items: center; gap: 8px; }
-  .loc-card { margin-bottom: 16px; }
-  .loc-card .card-header { background: #f1f5f9; }
-  .loc-item-row { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  textarea { resize: vertical; min-height: 72px; }
+  .detail-card-spacing { margin-top: 16px; }
+  .overview-loading-card { height: 180px; }
+  .item-detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+  .detail-field { padding: 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-subtle); }
+  .field-label { color: var(--text-secondary); font-size: 11px; font-weight: 650; }
+  .field-value { margin-top: 5px; color: var(--text); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+  .stock-count { color: var(--accent); font-size: 24px; line-height: 1; font-weight: 780; font-variant-numeric: tabular-nums; }
+  .stock-count.low { color: var(--danger); }
+  .stock-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .stock-actions-secondary { margin-left: auto; display: flex; gap: 8px; }
+  .detail-section { margin-top: 22px; }
+  .detail-section-title { margin-bottom: 10px; color: var(--brand-700); font-size: 13px; font-weight: 750; }
+  .loc-card { margin-bottom: 14px; }
+  .loc-card .card-header { background: linear-gradient(90deg, #f5f9f9, #fff); }
+  .location-icon { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 9px; color: var(--brand-600); background: var(--brand-100); }
+  .loc-header-copy { min-width: 0; }
+  .loc-header-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .loc-item-row { display: grid; grid-template-columns: minmax(180px, 1fr) 130px 90px auto; align-items: center; gap: 14px; padding: 13px 18px; border-bottom: 1px solid var(--border); }
   .loc-item-row:last-child { border-bottom: none; }
-  .loc-item-row:hover { background: #f8fafc; }
-  .loc-item-name { flex: 1; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .loc-item-meta { color: var(--text-secondary); font-size: 12px; font-weight: 400; margin-top: 2px; }
-  .loc-item-exp { margin: 0 12px; font-size: 13px; color: var(--text-secondary); min-width: 90px; }
-  .loc-item-exp.expired { color: var(--danger); font-weight: 600; }
-  .loc-item-qty { margin: 0 12px; font-weight: 600; color: var(--primary); min-width: 40px; text-align: right; }
-
+  .loc-item-row:hover { background: #fafcfc; }
+  .loc-item-name { min-width: 0; color: var(--text); font-weight: 700; }
+  .loc-item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .loc-item-meta { margin-top: 3px; color: var(--text-secondary); font-size: 11px; font-weight: 450; }
+  .loc-item-exp { color: var(--text-secondary); font-size: 12px; }
+  .loc-item-qty { color: var(--brand-700); font-size: 18px; font-weight: 780; text-align: right; font-variant-numeric: tabular-nums; }
+  .loc-item-qty small { display: block; color: var(--text-secondary); font-size: 9px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; }
   .loc-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .loc-batch-row { padding: 0 20px 12px; background: #f8fafc; border-bottom: 1px solid var(--border); }
-  .loc-batch-row:last-child { border-bottom: none; }
-  .batch-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .batch-table th, .batch-table td { padding: 6px 12px; text-align: left; border-bottom: 1px solid var(--border); }
-  .batch-table th { background: transparent; color: var(--text-secondary); font-weight: 500; font-size: 12px; }
-  .mov-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .loc-batch-row { padding: 14px 18px 16px; background: var(--surface-subtle); border-bottom: 1px solid var(--border); }
+  .expand-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .9fr); gap: 20px; }
+  .inline-section-title { margin-bottom: 6px; color: var(--text-secondary); font-size: 10px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+  .batch-table { font-size: 12px; }
+  .batch-table th, .batch-table td { padding: 8px 10px; }
+  .mov-row { display: grid; grid-template-columns: 58px 58px minmax(0,1fr) auto; align-items: center; gap: 9px; min-height: 39px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
   .mov-row:last-child { border-bottom: none; }
-  .mov-type { font-size: 16px; min-width: 20px; text-align: center; }
-  .mov-qty { font-weight: 600; min-width: 50px; text-align: right; }
-  .mov-qty.up { color: var(--success); }
-  .mov-qty.down { color: var(--danger); }
-  .mov-qty.adjust { color: var(--warning); }
-  .mov-note { flex: 1; color: var(--text-secondary); }
-  .mov-time { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+  .mov-type { color: var(--text-secondary); font-weight: 650; }
+  .mov-qty { font-weight: 750; text-align: right; font-variant-numeric: tabular-nums; }
+  .mov-qty.up { color: var(--success); } .mov-qty.down { color: var(--danger); } .mov-qty.adjust { color: var(--warning); }
+  .mov-note { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+  .mov-time { color: var(--text-soft); font-size: 10px; white-space: nowrap; }
+  .modal-overlay { display: none; position: fixed; inset: 0; z-index: 100; padding: 24px; align-items: center; justify-content: center; background: rgba(13,36,47,.54); backdrop-filter: blur(3px); }
+  .modal-overlay.active { display: flex; }
+  .modal { width: 100%; max-width: 520px; max-height: min(90vh, 760px); overflow-y: auto; border: 1px solid rgba(255,255,255,.35); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-lg); }
+  .modal.modal-sm { max-width: 410px; }
+  .modal-header { padding: 21px 22px 13px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border); }
+  .modal-header h2 { color: var(--brand-700); font-size: 18px; line-height: 1.3; }
+  .modal-subtitle { margin-top: 4px; color: var(--text-secondary); font-size: 11px; }
+  .modal-close { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary); cursor: pointer; }
+  .modal-close:hover { color: var(--text); background: var(--surface-subtle); }
+  .modal-body { padding: 20px 22px 6px; }
+  .modal-footer { padding: 15px 22px 20px; display: flex; justify-content: flex-end; gap: 8px; }
+  .toast-container { position: fixed; top: 18px; right: 18px; z-index: 200; display: grid; gap: 8px; pointer-events: none; }
+  .toast { min-width: 260px; max-width: 420px; padding: 12px 15px; display: flex; align-items: center; gap: 9px; border: 1px solid; border-radius: 11px; background: var(--surface); box-shadow: 0 12px 34px rgba(18,54,74,.16); color: var(--text); font-size: 12px; font-weight: 600; animation: slideIn .22s ease; pointer-events: auto; }
+  .toast::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .toast-success { color: var(--success); border-color: #b9e0d4; } .toast-error { color: var(--danger); border-color: #edc1c7; }
+  @keyframes slideIn { from { transform: translateY(-8px); opacity: 0; } }
+  .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .is-hidden { display: none !important; }
+
+  @media (max-width: 980px) {
+    .overview-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .manage-layout { grid-template-columns: 150px minmax(0,1fr); gap: 16px; }
+    .loc-item-row { grid-template-columns: minmax(160px,1fr) 115px 70px; }
+    .loc-item-actions { grid-column: 1 / -1; justify-content: flex-end; }
+    .item-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .expand-grid { grid-template-columns: 1fr; }
+  }
   @media (max-width: 768px) {
-    .header { padding: 12px 14px; }
-    .header h1 { font-size: 18px; }
-    .header-actions { gap: 6px; }
-    .health-badge { padding: 3px 8px; font-size: 12px; }
-    .primary-tabs { padding: 0 8px; position: sticky; top: 57px; z-index: 9; }
-    .primary-tabs .tab { flex: 1; text-align: center; }
-    .manage-tabs { overflow-x: auto; white-space: nowrap; }
-    .manage-tabs .tab { flex: 1; min-width: 96px; text-align: center; padding-inline: 12px; }
-    .container { padding: 12px; }
-    .toolbar { gap: 8px; margin-bottom: 12px; }
+    .header { height: 62px; padding: 0 14px; }
+    .brand-mark { width: 34px; height: 34px; }
+    .brand-subtitle { display: none; }
+    .health-badge { min-height: 31px; padding: 4px 9px; }
+    .primary-tabs { padding: 7px 12px; }
+    .container { padding: 20px 12px 36px; }
+    .page-heading { align-items: center; margin-bottom: 17px; }
+    .page-heading h1, .page-heading h2 { font-size: 21px; }
+    .page-description { display: none; }
+    .manage-layout { display: block; }
+    .manage-tabs { position: static; display: flex; gap: 5px; margin-bottom: 18px; padding: 6px; overflow-x: auto; }
+    .manage-tabs .tab { width: auto; min-width: max-content; padding-inline: 13px; }
+    .toolbar { gap: 8px; }
     .search-box { flex-basis: 100%; }
     .toolbar select { flex: 1; min-width: 0; }
-    .toolbar .btn { min-height: 38px; }
-    .card { border-radius: 10px; }
-    .table-wrap { -webkit-overflow-scrolling: touch; }
-    .table-wrap > table { min-width: 720px; }
+    .btn { min-height: 42px; }
+    .btn-sm { min-height: 36px; }
+    .card { border-radius: 11px; }
     .management-table { min-width: 0 !important; }
     .management-table thead { display: none; }
-    .management-table tbody, .management-table tr { display: block; width: 100%; box-sizing: border-box; }
-    .management-table tr { padding: 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .management-table tbody, .management-table tr { display: block; width: 100%; }
+    .management-table tr { padding: 14px; border-bottom: 1px solid var(--border); }
     .management-table tr:last-child { border-bottom: none; }
-    .management-table td { display: inline; padding: 0; border: 0; background: transparent !important; font-size: 13px; line-height: 1.6; }
-    .management-table td.cell-title { display: block; font-weight: 600; font-size: 15px; }
+    .management-table td { display: inline; padding: 0; border: 0; background: transparent !important; font-size: 12px; }
+    .management-table td.cell-title { display: block; margin-bottom: 2px; font-size: 15px; }
     .management-table td.cell-meta { color: var(--text-secondary); }
     .management-table td.cell-meta + td.cell-meta::before { content: ' · '; }
-    .management-table td.cell-stock { display: block; font-weight: 700; font-size: 18px; color: var(--primary); margin-top: 4px; }
+    .management-table td.cell-stock { display: block; margin-top: 7px; color: var(--accent); font-size: 18px; font-weight: 780; text-align: left; }
     .management-table td.cell-stock.low { color: var(--danger); }
-    .management-table td.cell-ops { display: flex; gap: 8px; margin-top: 10px; }
-    .management-table td.cell-ops .btn { flex: 1; justify-content: center; min-height: 36px; }
-    .item-detail-grid { grid-template-columns: 1fr 1fr; gap: 6px 12px; }
-    .stock-actions .btn { flex: 1; justify-content: center; min-width: 84px; }
-    .form-row { flex-direction: column; gap: 0; }
+    .management-table td.cell-ops { display: flex; gap: 7px; margin-top: 11px; }
+    .management-table td.cell-ops .btn { flex: 1; }
+    .loc-item-row { grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; padding: 14px; }
+    .loc-item-title { white-space: normal; }
+    .loc-item-exp { grid-column: 1; }
+    .loc-item-qty { grid-column: 2; grid-row: 1; }
+    .loc-item-actions { grid-column: 1 / -1; justify-content: stretch; }
+    .loc-item-actions .btn { flex: 1; }
+    .loc-batch-row { padding: 12px; overflow-x: auto; }
+    .batch-table { min-width: 480px; }
     .modal-overlay { align-items: flex-end; padding: 0; }
-    .modal { max-width: none; max-height: 92vh; border-radius: 16px 16px 0 0; }
-    .modal-body { padding: 16px 18px; }
-    .modal-header { padding: 16px 18px 0; }
-    .modal-footer { padding: 0 18px 16px; }
-    .modal-footer .btn { flex: 1; justify-content: center; min-height: 42px; }
-    .loc-card { margin-bottom: 12px; }
-    .loc-item-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px 14px; }
-    .loc-item-name { font-size: 15px; }
-    .loc-item-exp { grid-column: 1; margin: 0; min-width: 0; }
-    .loc-item-exp::before { content: '最近到期 '; color: var(--text-secondary); }
-    .loc-item-qty { grid-column: 2; grid-row: 1; margin: 0; min-width: 0; font-size: 16px; }
-    .loc-item-actions { grid-column: 1 / -1; margin-top: 4px; }
-    .loc-item-actions .btn { flex: 1; justify-content: center; min-height: 36px; }
-    .loc-batch-row { padding: 0 10px 10px; overflow-x: auto; }
-    .batch-table { min-width: 520px; }
+    .modal, .modal.modal-sm { max-width: none; max-height: 92vh; border-radius: 18px 18px 0 0; }
+    .modal-footer .btn { flex: 1; }
+    .stock-actions-secondary { width: 100%; margin-left: 0; }
+    .stock-actions-secondary .btn { flex: 1; }
     .toast-container { left: 12px; right: 12px; top: 12px; }
-    .toast { width: 100%; }
+    .toast { width: 100%; min-width: 0; max-width: none; }
   }
-
-  @media (max-width: 420px) {
-    .header h1 { font-size: 17px; }
+  @media (max-width: 480px) {
+    .brand-title { font-size: 15px; }
+    .health-badge { max-width: 126px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .overview-grid { gap: 9px; }
+    .metric-card { min-height: 104px; padding: 14px; }
+    .metric-value { font-size: 24px; }
+    .page-eyebrow { display: none; }
+    .page-actions .btn span { display: none; }
     .item-detail-grid { grid-template-columns: 1fr; }
-    .primary-tabs .tab { padding: 9px 12px; }
+    .form-row { flex-direction: column; gap: 0; }
+    .mov-row { grid-template-columns: 48px 48px minmax(0,1fr); }
+    .mov-time { grid-column: 3; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
   }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>Stow Core</h1>
-  <div class="header-actions">
-    <span class="health-badge" id="healthBadge">● 检查中...</span>
-    <button class="btn btn-primary btn-sm" id="headerCreateBtn" onclick="onCreate()" style="display:none">+ 新建物品</button>
+<header class="header">
+  <div class="brand" aria-label="Stow Core">
+    <span class="brand-mark" aria-hidden="true">
+      <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>
+    </span>
+    <div class="brand-copy">
+      <div class="brand-title">Stow Core</div>
+      <div class="brand-subtitle">库存管理工作台</div>
+    </div>
   </div>
-</div>
+  <div class="header-actions">
+    <span class="health-badge checking" id="healthBadge" role="status" aria-live="polite">正在检查服务</span>
+  </div>
+</header>
 
-<div class="tabs primary-tabs">
-  <div class="tab active" data-page="home" onclick="switchPage('home')">首页</div>
-  <div class="tab" data-page="manage" onclick="switchPage('manage')">管理</div>
-</div>
+<nav class="primary-nav" aria-label="主导航">
+  <div class="primary-tabs" role="tablist">
+    <button type="button" class="tab active" id="navHome" data-page="home" role="tab" aria-selected="true" aria-controls="pageHome" onclick="switchPage('home')">库存总览</button>
+    <button type="button" class="tab" id="navManage" data-page="manage" role="tab" aria-selected="false" aria-controls="pageManage" onclick="switchPage('manage')">管理中心</button>
+  </div>
+</nav>
 
-<div class="container">
-
-  <div id="pageHome">
-    <div class="toolbar">
-      <button class="btn btn-outline" onclick="loadLocationItems()">刷新</button>
+<main class="container">
+  <section id="pageHome" role="tabpanel" aria-labelledby="navHome">
+    <div class="page-heading">
+      <div>
+        <div class="page-eyebrow">Inventory overview</div>
+        <h1>库存总览</h1>
+        <p class="page-description">按存放位置掌握库存数量、批次与到期状态。</p>
+      </div>
+      <div class="page-actions">
+        <button type="button" class="btn btn-outline" onclick="loadLocationItems()">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/></svg>
+          <span>刷新数据</span>
+        </button>
+      </div>
+    </div>
+    <div class="overview-grid" id="overviewMetrics" aria-live="polite"></div>
+    <div class="section-heading">
+      <div><h2>按位置查看</h2><p>展开物品可查看最近流水与批次明细</p></div>
     </div>
     <div id="locationItemsContent"></div>
-  </div>
+  </section>
 
-  <div id="pageManage" style="display:none">
-    <div class="tabs manage-tabs">
-      <div class="tab active" data-manage-tab="items" onclick="switchManageTab('items')">物品管理</div>
-      <div class="tab" data-manage-tab="categories" onclick="switchManageTab('categories')">分类管理</div>
-      <div class="tab" data-manage-tab="locations" onclick="switchManageTab('locations')">位置管理</div>
-    </div>
+  <section id="pageManage" role="tabpanel" aria-labelledby="navManage" hidden>
+    <div class="manage-layout">
+      <nav class="manage-tabs" aria-label="管理中心" role="tablist" aria-orientation="vertical">
+        <button type="button" class="tab active" id="manageNavItems" data-manage-tab="items" role="tab" aria-selected="true" aria-controls="tabItems" onclick="switchManageTab('items')">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>物品
+        </button>
+        <button type="button" class="tab" id="manageNavCategories" data-manage-tab="categories" role="tab" aria-selected="false" aria-controls="tabCategories" onclick="switchManageTab('categories')">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13 13 20l-9-9V4h7z"/><circle cx="8.5" cy="8.5" r="1"/></svg>分类
+        </button>
+        <button type="button" class="tab" id="manageNavLocations" data-manage-tab="locations" role="tab" aria-selected="false" aria-controls="tabLocations" onclick="switchManageTab('locations')">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>位置
+        </button>
+        <button type="button" class="tab" id="manageNavSettings" data-manage-tab="settings" role="tab" aria-selected="false" aria-controls="tabSettings" onclick="switchManageTab('settings')">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>设置
+        </button>
+      </nav>
 
-  <div id="tabItems">
-    <div class="toolbar">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="搜索物品名称..." oninput="renderItems()">
-      </div>
-      <select id="filterCategory" onchange="renderItems()"><option value="">全部分类</option></select>
-      <select id="filterLocation" onchange="renderItems()"><option value="">全部位置</option></select>
-      <button class="btn btn-outline" onclick="loadItems()">刷新</button>
-    </div>
+      <div class="manage-content">
+        <section id="tabItems" role="tabpanel" aria-labelledby="manageNavItems">
+          <div class="page-heading">
+            <div><div class="page-eyebrow">Catalog</div><h2>物品管理</h2><p class="page-description">维护物品信息并执行入库、出库和盘点。</p></div>
+            <div class="page-actions"><button type="button" class="btn btn-primary" onclick="showCreateModal()"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>新建物品</span></button></div>
+          </div>
+          <div class="toolbar">
+            <label class="search-box">
+              <span class="visually-hidden">搜索物品名称</span>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <input type="search" id="searchInput" placeholder="搜索物品名称" oninput="renderItems()">
+            </label>
+            <select id="filterCategory" aria-label="按分类筛选" onchange="renderItems()"><option value="">全部分类</option></select>
+            <select id="filterLocation" aria-label="按位置筛选" onchange="renderItems()"><option value="">全部位置</option></select>
+            <button type="button" class="btn btn-outline" onclick="clearItemFilters()">清除</button>
+            <button type="button" class="btn btn-outline" onclick="loadItems()" aria-label="刷新物品列表"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/></svg></button>
+          </div>
+          <div class="card">
+            <div class="card-header"><span>物品列表</span><span class="count" id="itemCount">0 项</span></div>
+            <div class="table-wrap"><table class="management-table"><thead><tr><th>名称</th><th>分类</th><th>位置</th><th class="numeric">库存</th><th>操作</th></tr></thead><tbody id="itemTableBody"></tbody></table></div>
+            <div class="empty" id="emptyState"></div>
+          </div>
+          <div class="card is-hidden detail-card-spacing" id="detailCard">
+            <div class="card-header"><span id="detailTitle">物品详情</span><button type="button" class="btn btn-ghost btn-sm" onclick="hideDetail()">关闭</button></div>
+            <div class="card-body"><div id="detailContent"></div></div>
+          </div>
+        </section>
 
-    <div class="card">
-      <div class="card-header">
-        <span>物品列表</span>
-        <span style="font-weight:400;font-size:13px;color:var(--text-secondary)" id="itemCount">0 项</span>
-      </div>
-      <div class="table-wrap">
-        <table class="management-table">
-          <thead>
-            <tr>
-              <th>名称</th>
-              <th>分类</th>
-              <th>位置</th>
-              <th style="width:80px">库存</th>
-              <th style="width:200px">操作</th>
-            </tr>
-          </thead>
-          <tbody id="itemTableBody"></tbody>
-        </table>
-      </div>
-      <div class="empty" id="emptyState">
-        <div style="font-size:40px;color:var(--border);margin-bottom:8px">📦</div>
-        <p>暂无物品，点击右上角「新建物品」开始</p>
-      </div>
-    </div>
+        <section id="tabCategories" role="tabpanel" aria-labelledby="manageNavCategories" hidden>
+          <div class="page-heading"><div><div class="page-eyebrow">Taxonomy</div><h2>分类管理</h2><p class="page-description">维护用于整理物品的分类名称。</p></div><div class="page-actions"><button type="button" class="btn btn-primary" onclick="showCategoryModal()"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>新建分类</span></button></div></div>
+          <div class="card">
+            <div class="card-header"><span>分类列表</span><div class="resource-actions"><span class="count" id="categoryCount">0 项</span><button type="button" class="btn btn-ghost btn-sm" onclick="loadCategories()">刷新</button></div></div>
+            <div class="table-wrap"><table class="management-table"><thead><tr><th>名称</th><th>操作</th></tr></thead><tbody id="categoryTableBody"></tbody></table></div>
+            <div class="empty" id="categoryEmpty"></div>
+          </div>
+        </section>
 
-    <div class="card" id="detailCard" style="display:none;margin-top:20px">
-      <div class="card-header">
-        <span id="detailTitle">物品详情</span>
-        <button class="btn btn-outline btn-sm" onclick="hideDetail()">关闭</button>
-      </div>
-      <div class="card-body" style="padding:20px">
-        <div id="detailContent"></div>
-      </div>
-    </div>
-  </div>
+        <section id="tabLocations" role="tabpanel" aria-labelledby="manageNavLocations" hidden>
+          <div class="page-heading"><div><div class="page-eyebrow">Storage</div><h2>位置管理</h2><p class="page-description">维护仓储空间与物品存放位置。</p></div><div class="page-actions"><button type="button" class="btn btn-primary" onclick="showLocationModal()"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>新建位置</span></button></div></div>
+          <div class="card">
+            <div class="card-header"><span>位置列表</span><div class="resource-actions"><span class="count" id="locationCount">0 项</span><button type="button" class="btn btn-ghost btn-sm" onclick="loadLocations()">刷新</button></div></div>
+            <div class="table-wrap"><table class="management-table"><thead><tr><th>名称</th><th>操作</th></tr></thead><tbody id="locationTableBody"></tbody></table></div>
+            <div class="empty" id="locationEmpty"></div>
+          </div>
+        </section>
 
-  <div id="tabCategories" style="display:none">
-    <div class="toolbar">
-      <button class="btn btn-primary" onclick="showCategoryModal()">+ 新建分类</button>
-      <button class="btn btn-outline" onclick="loadCategories()">刷新</button>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <span>分类列表</span>
-        <span style="font-weight:400;font-size:13px;color:var(--text-secondary)" id="categoryCount">0 项</span>
-      </div>
-      <div class="table-wrap">
-        <table class="management-table">
-          <thead>
-            <tr><th>名称</th><th style="width:160px">操作</th></tr>
-          </thead>
-          <tbody id="categoryTableBody"></tbody>
-        </table>
-      </div>
-      <div class="empty" id="categoryEmpty">
-        <div style="font-size:40px;color:var(--border);margin-bottom:8px">🏷️</div>
-        <p>暂无分类，点击上方「新建分类」创建</p>
+        <section id="tabSettings" role="tabpanel" aria-labelledby="manageNavSettings" hidden>
+          <div class="page-heading"><div><div class="page-eyebrow">Connection</div><h2>服务设置</h2><p class="page-description">配置库存 API 的服务地址与可选访问凭据。</p></div></div>
+          <div class="card settings-card"><div class="card-header"><span>API 连接</span><span class="status-pill">保存在当前浏览器</span></div><div class="card-body">
+            <div class="form-group"><label for="settingsUrl">服务 URL</label><input type="url" id="settingsUrl" placeholder="http://127.0.0.1:8080"><p class="form-hint">用于健康检查与所有库存请求。</p></div>
+            <div class="form-group"><label for="settingsKey">API Key <span class="count">（可选）</span></label><input type="password" id="settingsKey" placeholder="输入 API Key" autocomplete="off"><p class="form-hint">配置后将以 Bearer Token 随请求发送。</p></div>
+            <button type="button" class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+          </div></div>
+        </section>
       </div>
     </div>
-  </div>
+  </section>
+</main>
 
-  <div id="tabLocations" style="display:none">
-    <div class="toolbar">
-      <button class="btn btn-primary" onclick="showLocationModal()">+ 新建位置</button>
-      <button class="btn btn-outline" onclick="loadLocations()">刷新</button>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <span>位置列表</span>
-        <span style="font-weight:400;font-size:13px;color:var(--text-secondary)" id="locationCount">0 项</span>
-      </div>
-      <div class="table-wrap">
-        <table class="management-table">
-          <thead>
-            <tr><th>名称</th><th style="width:160px">操作</th></tr>
-          </thead>
-          <tbody id="locationTableBody"></tbody>
-        </table>
-      </div>
-      <div class="empty" id="locationEmpty">
-        <div style="font-size:40px;color:var(--border);margin-bottom:8px">📍</div>
-        <p>暂无位置，点击上方「新建位置」创建</p>
-      </div>
-    </div>
-  </div>
-
-  </div>
-
-</div>
-
-<div class="modal-overlay" id="createModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="createModalTitle">新建物品</h2>
-      <button class="modal-close" onclick="closeModal('createModal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="editItemId">
-      <div class="form-group">
-        <label>名称</label>
-        <input type="text" id="formName" placeholder="如：大米">
-      </div>
-      <div class="form-group">
-        <label>分类</label>
-        <select id="formCategory"></select>
-      </div>
-      <div class="form-group">
-        <label>位置</label>
-        <select id="formLocation"></select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('createModal')">取消</button>
-      <button class="btn btn-primary" id="createBtn" onclick="submitItem()">保存</button>
-    </div>
+<div class="modal-overlay" id="createModal" role="dialog" aria-modal="true" aria-labelledby="createModalTitle">
+  <div class="modal"><div class="modal-header"><div><h2 id="createModalTitle">新建物品</h2><p class="modal-subtitle">设置名称、分类与存放位置</p></div><button type="button" class="modal-close" onclick="closeModal('createModal')" aria-label="关闭"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="editItemId"><div class="form-group"><label for="formName">名称</label><input type="text" id="formName" placeholder="如：大米" required></div><div class="form-group"><label for="formCategory">分类</label><select id="formCategory"></select></div><div class="form-group"><label for="formLocation">位置</label><select id="formLocation"></select></div></div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('createModal')">取消</button><button type="button" class="btn btn-primary" id="createBtn" onclick="submitItem()">保存</button></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="stockModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="stockModalTitle">入库</h2>
-      <button class="modal-close" onclick="closeModal('stockModal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="stockItemId">
-      <input type="hidden" id="stockAction">
-      <div class="form-group">
-        <label id="stockQuantityLabel">入库数量</label>
-        <input type="number" id="formStockQuantity" min="1" step="1" placeholder="输入数量">
-      </div>
-      <div class="form-group">
-        <label>备注</label>
-        <input type="text" id="formStockNote" placeholder="如：本周补货">
-      </div>
-      <div class="form-group" id="formExpirationGroup">
-        <label>到期日期</label>
-        <input type="date" id="formExpirationDate" placeholder="如：2027-06-01">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('stockModal')">取消</button>
-      <button class="btn btn-primary" id="stockBtn" onclick="submitStock()">确认</button>
-    </div>
+<div class="modal-overlay" id="stockModal" role="dialog" aria-modal="true" aria-labelledby="stockModalTitle">
+  <div class="modal"><div class="modal-header"><div><h2 id="stockModalTitle">入库</h2><p class="modal-subtitle">记录数量、备注与可选到期日期</p></div><button type="button" class="modal-close" onclick="closeModal('stockModal')" aria-label="关闭"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="stockItemId"><input type="hidden" id="stockAction"><div class="form-group"><label for="formStockQuantity" id="stockQuantityLabel">入库数量</label><input type="number" id="formStockQuantity" min="1" step="1" inputmode="numeric" placeholder="输入数量" required></div><div class="form-group"><label for="formStockNote">备注</label><input type="text" id="formStockNote" placeholder="如：本周补货"></div><div class="form-group" id="formExpirationGroup"><label for="formExpirationDate">到期日期</label><input type="date" id="formExpirationDate"></div></div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('stockModal')">取消</button><button type="button" class="btn btn-primary" id="stockBtn" onclick="submitStock()">确认</button></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="adjustModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>盘点</h2>
-      <button class="modal-close" onclick="closeModal('adjustModal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="adjustItemId">
-      <div class="form-group">
-        <label>实际数量</label>
-        <input type="number" id="formAdjustQuantity" min="0" step="1" placeholder="盘点后的实际数量">
-      </div>
-      <div class="form-group">
-        <label>备注</label>
-        <input type="text" id="formAdjustNote" placeholder="如：实际盘点">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('adjustModal')">取消</button>
-      <button class="btn btn-warning" onclick="submitAdjust()">确认盘点</button>
-    </div>
+<div class="modal-overlay" id="adjustModal" role="dialog" aria-modal="true" aria-labelledby="adjustModalTitle">
+  <div class="modal"><div class="modal-header"><div><h2 id="adjustModalTitle">盘点</h2><p class="modal-subtitle">将账面库存修正为实际数量</p></div><button type="button" class="modal-close" onclick="closeModal('adjustModal')" aria-label="关闭"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="adjustItemId"><div class="form-group"><label for="formAdjustQuantity">实际数量</label><input type="number" id="formAdjustQuantity" min="0" step="1" inputmode="numeric" placeholder="盘点后的实际数量" required></div><div class="form-group"><label for="formAdjustNote">备注</label><input type="text" id="formAdjustNote" placeholder="如：实际盘点"></div></div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('adjustModal')">取消</button><button type="button" class="btn btn-warning" id="adjustBtn" onclick="submitAdjust()">确认盘点</button></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="nameModal">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header">
-      <h2 id="nameModalTitle">新建</h2>
-      <button class="modal-close" onclick="closeModal('nameModal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="nameEditId">
-      <input type="hidden" id="nameModalKind">
-      <div class="form-group">
-        <label id="nameModalLabel">名称</label>
-        <input type="text" id="formNameOnly" placeholder="输入名称">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('nameModal')">取消</button>
-      <button class="btn btn-primary" id="nameModalBtn" onclick="submitName()">保存</button>
-    </div>
+<div class="modal-overlay" id="nameModal" role="dialog" aria-modal="true" aria-labelledby="nameModalTitle">
+  <div class="modal modal-sm"><div class="modal-header"><div><h2 id="nameModalTitle">新建</h2><p class="modal-subtitle">名称需保持清晰且唯一</p></div><button type="button" class="modal-close" onclick="closeModal('nameModal')" aria-label="关闭"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="nameEditId"><input type="hidden" id="nameModalKind"><div class="form-group"><label for="formNameOnly" id="nameModalLabel">名称</label><input type="text" id="formNameOnly" placeholder="输入名称" required></div></div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('nameModal')">取消</button><button type="button" class="btn btn-primary" id="nameModalBtn" onclick="submitName()">保存</button></div>
   </div>
 </div>
 
-<div id="toastContainer" class="toast-container"></div>
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-const BASE = 'http://127.0.0.1:8080';
+const DEFAULT_URL = 'http://127.0.0.1:8080';
+
+function getBaseUrl() {
+  return localStorage.getItem('stow_api_url') || DEFAULT_URL;
+}
+
+function getApiKey() {
+  return localStorage.getItem('stow_api_key') || '';
+}
+
 let currentPage = 'home';
 let currentManageTab = 'items';
 let items = [];
@@ -501,12 +472,47 @@ let categories = [];
 let locations = [];
 let selectedItemId = null;
 let _detailItem = null;
+let lastModalTrigger = null;
+
+const icons = {
+  box: '<svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>',
+  pin: '<svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  layers: '<svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg>',
+  alert: '<svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  empty: '<svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>'
+};
+
+function statePanel(icon, title, description, action = '') {
+  return `<div class="state-panel"><div class="state-icon">${icon}</div><div class="state-title">${esc(title)}</div><div class="state-description">${esc(description)}</div>${action ? `<div class="state-action">${action}</div>` : ''}</div>`;
+}
+
+function renderOverviewSkeleton() {
+  document.getElementById('overviewMetrics').innerHTML = Array.from({ length: 4 }, () => '<div class="metric-card skeleton skeleton-card"></div>').join('');
+  document.getElementById('locationItemsContent').innerHTML = '<div class="card skeleton overview-loading-card"></div>';
+}
+
+function renderOverview(stocked) {
+  const today = new Date().toISOString().slice(0, 10);
+  const totalQty = stocked.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const usedLocations = new Set(stocked.map(item => item.location).filter(Boolean)).size;
+  const expired = stocked.reduce((sum, item) => sum + (item._batches || []).filter(batch => batch.quantity > 0 && batch.expiration_date && batch.expiration_date < today).length, 0);
+  const metrics = [
+    ['有库存物品', stocked.length, icons.box, ''],
+    ['库存总量', totalQty, icons.layers, ''],
+    ['使用中的位置', usedLocations, icons.pin, ''],
+    ['已过期批次', expired, icons.alert, expired ? 'alert' : '']
+  ];
+  document.getElementById('overviewMetrics').innerHTML = metrics.map(([label, value, icon, className]) => `<div class="metric-card ${className}"><div class="metric-top"><span>${label}</span><span class="metric-icon">${icon}</span></div><div class="metric-value">${value}</div></div>`).join('');
+}
 
 function api(path, opts = {}) {
-  const url = BASE + path;
+  const key = getApiKey();
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) headers['Authorization'] = 'Bearer ' + key;
+  const url = getBaseUrl() + path;
   return fetch(url, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', ...opts.headers },
+    headers: { ...headers, ...opts.headers },
   }).then(async r => {
     if (!r.ok) {
       const text = await r.text().catch(() => '');
@@ -522,60 +528,62 @@ function toast(msg, type = 'success') {
   const c = document.getElementById('toastContainer');
   const el = document.createElement('div');
   el.className = 'toast toast-' + type;
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status');
   el.textContent = msg;
   c.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(() => el.remove(), type === 'error' ? 5000 : 3200);
 }
 
 function closeModal(id) {
-  document.getElementById(id).classList.remove('active');
+  const overlay = document.getElementById(id);
+  overlay.classList.remove('active');
+  if (lastModalTrigger && document.contains(lastModalTrigger)) lastModalTrigger.focus();
 }
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-
-function updateCreateButton() {
-  const btn = document.getElementById('headerCreateBtn');
-  if (currentPage === 'home') {
-    btn.style.display = 'none';
-    return;
-  }
-  btn.style.display = '';
-  btn.textContent = currentManageTab === 'items'
-    ? '+ 新建物品'
-    : currentManageTab === 'categories' ? '+ 新建分类' : '+ 新建位置';
+function openModal(id) {
+  lastModalTrigger = document.activeElement;
+  const overlay = document.getElementById(id);
+  overlay.classList.add('active');
+  setTimeout(() => {
+    const target = overlay.querySelector('.modal-body input:not([type="hidden"]), .modal-body select, .modal-body textarea') || overlay.querySelector('button');
+    if (target) target.focus();
+  }, 0);
 }
 
 function switchPage(page) {
   currentPage = page;
-  document.querySelectorAll('.primary-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.page === page));
-  document.getElementById('pageHome').style.display = page === 'home' ? '' : 'none';
-  document.getElementById('pageManage').style.display = page === 'manage' ? '' : 'none';
-  updateCreateButton();
+  document.querySelectorAll('.primary-tabs .tab').forEach(t => {
+    const active = t.dataset.page === page;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', String(active));
+  });
+  document.getElementById('pageHome').hidden = page !== 'home';
+  document.getElementById('pageManage').hidden = page !== 'manage';
   if (page === 'home') loadLocationItems();
 }
 
 function switchManageTab(tab) {
   currentManageTab = tab;
-  document.querySelectorAll('.manage-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.manageTab === tab));
-  document.getElementById('tabItems').style.display = tab === 'items' ? '' : 'none';
-  document.getElementById('tabCategories').style.display = tab === 'categories' ? '' : 'none';
-  document.getElementById('tabLocations').style.display = tab === 'locations' ? '' : 'none';
-  updateCreateButton();
-}
-
-function onCreate() {
-  if (currentManageTab === 'items') showCreateModal();
-  else if (currentManageTab === 'categories') showCategoryModal();
-  else showLocationModal();
+  document.querySelectorAll('.manage-tabs .tab').forEach(t => {
+    const active = t.dataset.manageTab === tab;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', String(active));
+  });
+  ['items', 'categories', 'locations', 'settings'].forEach(name => {
+    const id = 'tab' + name.charAt(0).toUpperCase() + name.slice(1);
+    document.getElementById(id).hidden = name !== tab;
+  });
 }
 
 function checkHealth() {
   const badge = document.getElementById('healthBadge');
+  badge.className = 'health-badge checking';
+  badge.textContent = '正在检查服务';
   api('/health').then(() => {
     badge.className = 'health-badge ok';
-    badge.textContent = '● 服务正常';
+    badge.textContent = '服务正常';
   }).catch(() => {
     badge.className = 'health-badge';
-    badge.textContent = '● 无法连接';
+    badge.textContent = '无法连接';
   });
 }
 
@@ -612,6 +620,13 @@ function populateFilterSelects() {
   locSel.value = curLoc;
 }
 
+function clearItemFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterLocation').value = '';
+  renderItems();
+}
+
 function renderItems() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   const filterCat = document.getElementById('filterCategory').value;
@@ -622,26 +637,27 @@ function renderItems() {
   if (filterLoc) filtered = filtered.filter(i => i.location === filterLoc);
   const tbody = document.getElementById('itemTableBody');
   const empty = document.getElementById('emptyState');
-  document.getElementById('itemCount').textContent = filtered.length + ' 项';
+  document.getElementById('itemCount').textContent = `显示 ${filtered.length} / 共 ${items.length} 项`;
   if (filtered.length === 0) {
     tbody.innerHTML = '';
-    empty.style.display = 'block';
+    empty.classList.remove('is-hidden');
+    empty.innerHTML = statePanel(icons.empty, items.length ? '没有匹配的物品' : '还没有物品', items.length ? '调整搜索或筛选条件后再试。' : '创建第一个物品，开始管理库存。', items.length ? '' : '<button type="button" class="btn btn-primary" onclick="showCreateModal()">新建物品</button>');
     return;
   }
-  empty.style.display = 'none';
+  empty.classList.add('is-hidden');
   tbody.innerHTML = filtered.map(item => {
     const lowStock = item.quantity != null && item.quantity <= 0;
     const cat = esc(item.category || '未分类');
     const loc = esc(item.location || '未设置位置');
-    return `<tr onclick="showDetail(${item.id})">
-      <td class="cell-title">${esc(item.name)}</td>
+    return `<tr>
+      <td class="cell-title"><button type="button" class="item-link" onclick="showDetail(${item.id})">${esc(item.name)}</button></td>
       <td class="cell-meta">${cat}</td>
       <td class="cell-meta">${loc}</td>
-      <td class="cell-stock${lowStock ? ' low' : ''}">${item.quantity ?? 0}</td>
+      <td class="cell-stock numeric${lowStock ? ' low' : ''}">${item.quantity ?? 0}</td>
       <td class="cell-ops">
-        <button class="btn btn-success btn-sm" onclick="event.stopPropagation();showStockIn(${item.id})">入库</button>
-        <button class="btn btn-warning btn-sm" onclick="event.stopPropagation();showStockOut(${item.id})" ${!item.quantity ? 'disabled' : ''}>出库</button>
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showAdjust(${item.id})">盘点</button>
+        <button type="button" class="btn btn-success btn-sm" onclick="showStockIn(${item.id})">入库</button>
+        <button type="button" class="btn btn-warning btn-sm" onclick="showStockOut(${item.id})" ${!item.quantity ? 'disabled' : ''}>出库</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="showAdjust(${item.id})">盘点</button>
       </td>
     </tr>`;
   }).join('');
@@ -711,7 +727,7 @@ function deleteItem(id) {
 
 function hideDetail() {
   selectedItemId = null;
-  document.getElementById('detailCard').style.display = 'none';
+  document.getElementById('detailCard').classList.add('is-hidden');
 }
 
 function showDetail(id, forceRefresh = false) {
@@ -723,70 +739,46 @@ function showDetail(id, forceRefresh = false) {
   api('/api/items/' + id).then(item => {
     _detailItem = item;
     const card = document.getElementById('detailCard');
-    card.style.display = 'block';
-    document.getElementById('detailTitle').textContent = '物品详情 - ' + item.name;
+    card.classList.remove('is-hidden');
+    document.getElementById('detailTitle').textContent = item.name;
     const movements = api('/api/items/' + id + '/movements');
     document.getElementById('detailContent').innerHTML = `
       <div class="item-detail-grid">
-        <div><div class="field-label">名称</div><div class="field-value">${esc(item.name)}</div></div>
-        <div><div class="field-label">分类</div><div class="field-value">${esc(item.category || '-')}</div></div>
-        <div><div class="field-label">位置</div><div class="field-value">${esc(item.location || '-')}</div></div>
-        <div><div class="field-label">当前库存</div><div class="stock-count" style="color:${item.quantity <= 0 ? 'var(--danger)' : 'var(--primary)'}">${item.quantity ?? 0}</div></div>
+        <div class="detail-field"><div class="field-label">名称</div><div class="field-value">${esc(item.name)}</div></div>
+        <div class="detail-field"><div class="field-label">分类</div><div class="field-value">${esc(item.category || '未分类')}</div></div>
+        <div class="detail-field"><div class="field-label">位置</div><div class="field-value">${esc(item.location || '未设置')}</div></div>
+        <div class="detail-field"><div class="field-label">当前库存</div><div class="stock-count${item.quantity <= 0 ? ' low' : ''}">${item.quantity ?? 0}</div></div>
       </div>
       <div class="stock-actions">
-        <button class="btn btn-success" onclick="showStockIn(${item.id})">+ 入库</button>
-        <button class="btn btn-warning" onclick="showStockOut(${item.id})" ${!item.quantity ? 'disabled' : ''}>- 出库</button>
-        <button class="btn btn-outline" onclick="showAdjust(${item.id})">盘点</button>
-        <button class="btn btn-outline" onclick="showEditModal(_detailItem)">编辑</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">删除</button>
+        <button type="button" class="btn btn-success" onclick="showStockIn(${item.id})">入库</button>
+        <button type="button" class="btn btn-warning" onclick="showStockOut(${item.id})" ${!item.quantity ? 'disabled' : ''}>出库</button>
+        <button type="button" class="btn btn-outline" onclick="showAdjust(${item.id})">盘点</button>
+        <div class="stock-actions-secondary"><button type="button" class="btn btn-ghost" onclick="showEditModal(_detailItem)">编辑信息</button><button type="button" class="btn btn-danger" onclick="deleteItem(${item.id})">删除</button></div>
       </div>
-      <div class="movements-table">
-        <div style="font-size:15px;font-weight:600;margin:20px 0 12px">库存流水</div>
-        <div id="movementsContent"><div style="text-align:center;color:var(--text-secondary);padding:20px">加载中...</div></div>
-      </div>
-      <div class="movements-table">
-        <div style="font-size:15px;font-weight:600;margin:20px 0 12px">批次</div>
-        <div id="batchesContent"><div style="text-align:center;color:var(--text-secondary);padding:20px">加载中...</div></div>
-      </div>`;
+      <div class="detail-section"><div class="detail-section-title">库存流水</div><div id="movementsContent">${statePanel(icons.layers, '正在加载流水', '请稍候…')}</div></div>
+      <div class="detail-section"><div class="detail-section-title">批次明细</div><div id="batchesContent">${statePanel(icons.box, '正在加载批次', '请稍候…')}</div></div>`;
     api('/api/items/' + id + '/batches').then(batches => {
       const el = document.getElementById('batchesContent');
       if (!batches || batches.length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px">暂无批次</div>';
+        el.innerHTML = statePanel(icons.box, '暂无批次', '完成入库后，批次会显示在这里。');
         return;
       }
-      el.innerHTML = `<div class="table-wrap"><table>
-        <thead><tr><th>ID</th><th>数量</th><th>到期日期</th><th>创建时间</th></tr></thead>
-        <tbody>${batches.map(b => `<tr>
-          <td>${b.id}</td>
-          <td style="font-weight:600">${b.quantity}</td>
-          <td>${b.expiration_date ? esc(b.expiration_date) : '无'}</td>
-          <td>${fmtTime(b.created_at)}</td>
-        </tr>`).join('')}</tbody></table></div>`;
-    }).catch(e => {
-      document.getElementById('batchesContent').innerHTML = '<div style="text-align:center;color:var(--danger);padding:20px">加载批次失败</div>';
-    });
+      const today = new Date().toISOString().slice(0,10);
+      el.innerHTML = `<div class="table-wrap"><table><thead><tr><th>ID</th><th class="numeric">剩余数量</th><th>到期日期</th><th>创建时间</th></tr></thead><tbody>${batches.map(b => `<tr><td>${b.id}</td><td class="numeric"><strong>${b.quantity}</strong></td><td>${b.expiration_date ? `<span class="status-pill ${b.expiration_date < today ? 'expired' : 'ok'}">${b.expiration_date < today ? '已过期 · ' : ''}${esc(b.expiration_date)}</span>` : '<span class="status-pill">无期限</span>'}</td><td>${fmtTime(b.created_at)}</td></tr>`).join('')}</tbody></table></div>`;
+    }).catch(() => { document.getElementById('batchesContent').innerHTML = statePanel(icons.alert, '批次加载失败', '稍后刷新详情重试。'); });
     movements.then(mvs => {
       const el = document.getElementById('movementsContent');
       if (!mvs || mvs.length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px">暂无流水记录</div>';
+        el.innerHTML = statePanel(icons.layers, '暂无流水记录', '库存发生变化后，记录会显示在这里。');
         return;
       }
-      el.innerHTML = `<div class="table-wrap"><table>
-        <thead><tr><th>时间</th><th>类型</th><th>数量</th><th>变动后库存</th><th>备注</th></tr></thead>
-        <tbody>${mvs.map(m => {
-          let typeLabel = { 'stock_in':'入库','stock_out':'出库','adjust':'盘点' }[m.type] || m.type;
-          let qtyColor = m.type === 'stock_in' ? 'var(--success)' : m.type === 'stock_out' ? 'var(--danger)' : 'var(--warning)';
-          return `<tr>
-            <td>${fmtTime(m.created_at)}</td>
-            <td>${esc(typeLabel)}</td>
-            <td style="color:${qtyColor};font-weight:600">${m.change > 0 ? '+' : ''}${m.change}</td>
-            <td>${m.quantity_after}</td>
-            <td>${esc(m.note || '-')}</td>
-          </tr>`;
-        }).join('')}</tbody></table></div>`;
-    }).catch(e => {
-      document.getElementById('movementsContent').innerHTML = '<div style="text-align:center;color:var(--danger);padding:20px">加载流水失败</div>';
-    });
+      el.innerHTML = `<div class="table-wrap"><table><thead><tr><th>时间</th><th>类型</th><th class="numeric">变化</th><th class="numeric">变动后</th><th>备注</th></tr></thead><tbody>${mvs.map(m => {
+        const typeLabel = { stock_in:'入库', stock_out:'出库', adjust:'盘点' }[m.type] || m.type;
+        const qtyClass = m.type === 'stock_in' ? 'up' : m.type === 'stock_out' ? 'down' : 'adjust';
+        return `<tr><td>${fmtTime(m.created_at)}</td><td><span class="status-pill">${esc(typeLabel)}</span></td><td class="numeric mov-qty ${qtyClass}">${m.change > 0 ? '+' : ''}${m.change}</td><td class="numeric">${m.quantity_after}</td><td>${esc(m.note || '-')}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+    }).catch(() => { document.getElementById('movementsContent').innerHTML = statePanel(icons.alert, '流水加载失败', '稍后刷新详情重试。'); });
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }).catch(e => toast('加载详情失败: ' + e.message, 'error'));
 }
 
@@ -855,7 +847,7 @@ function submitAdjust() {
   const qty = parseInt(document.getElementById('formAdjustQuantity').value);
   const note = document.getElementById('formAdjustNote').value.trim();
   if (isNaN(qty) || qty < 0) { toast('请输入有效的实际数量', 'error'); return; }
-  const btn = document.querySelector('#adjustModal .btn-warning');
+  const btn = document.getElementById('adjustBtn');
   btn.disabled = true;
   api('/api/items/' + id + '/adjust', {
     method: 'POST',
@@ -887,17 +879,12 @@ function renderCategories() {
   document.getElementById('categoryCount').textContent = categories.length + ' 项';
   if (categories.length === 0) {
     tbody.innerHTML = '';
-    empty.style.display = 'block';
+    empty.classList.remove('is-hidden');
+    empty.innerHTML = statePanel(icons.empty, '还没有分类', '创建分类，让物品更容易查找。', '<button type="button" class="btn btn-primary" onclick="showCategoryModal()">新建分类</button>');
     return;
   }
-  empty.style.display = 'none';
-  tbody.innerHTML = categories.map(c => `<tr>
-    <td class="cell-title">${esc(c.name)}</td>
-    <td class="cell-ops">
-      <button class="btn btn-outline btn-sm" onclick="editCategory(${c.id})">编辑</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id})">删除</button>
-    </td>
-  </tr>`).join('');
+  empty.classList.add('is-hidden');
+  tbody.innerHTML = categories.map(c => `<tr><td class="cell-title">${esc(c.name)}</td><td class="cell-ops"><button type="button" class="btn btn-outline btn-sm" onclick="editCategory(${c.id})">编辑</button><button type="button" class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id})">删除</button></td></tr>`).join('');
 }
 
 function showCategoryModal() {
@@ -947,17 +934,12 @@ function renderLocations() {
   document.getElementById('locationCount').textContent = locations.length + ' 项';
   if (locations.length === 0) {
     tbody.innerHTML = '';
-    empty.style.display = 'block';
+    empty.classList.remove('is-hidden');
+    empty.innerHTML = statePanel(icons.pin, '还没有位置', '创建存放位置，开始组织库存。', '<button type="button" class="btn btn-primary" onclick="showLocationModal()">新建位置</button>');
     return;
   }
-  empty.style.display = 'none';
-  tbody.innerHTML = locations.map(l => `<tr>
-    <td class="cell-title">${esc(l.name)}</td>
-    <td class="cell-ops">
-      <button class="btn btn-outline btn-sm" onclick="editLocation(${l.id})">编辑</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteLocation(${l.id})">删除</button>
-    </td>
-  </tr>`).join('');
+  empty.classList.add('is-hidden');
+  tbody.innerHTML = locations.map(l => `<tr><td class="cell-title">${esc(l.name)}</td><td class="cell-ops"><button type="button" class="btn btn-outline btn-sm" onclick="editLocation(${l.id})">编辑</button><button type="button" class="btn btn-danger btn-sm" onclick="deleteLocation(${l.id})">删除</button></td></tr>`).join('');
 }
 
 function showLocationModal() {
@@ -995,6 +977,7 @@ function deleteLocation(id) {
 let _allItems = [];
 
 function loadLocationItems() {
+  renderOverviewSkeleton();
   Promise.all([
     api('/api/items'),
     api('/api/locations'),
@@ -1003,6 +986,7 @@ function loadLocationItems() {
     locations = locsData;
     const stocked = itemsData.filter(i => i.quantity > 0);
     if (stocked.length === 0) {
+      renderOverview([]);
       renderLocationItems([]);
       return;
     }
@@ -1010,103 +994,92 @@ function loadLocationItems() {
       i._batches = batches;
       const valid = batches.filter(b => b.quantity > 0 && b.expiration_date);
       i._nearestExp = valid.length ? valid.reduce((a, b) => a.expiration_date < b.expiration_date ? a : b).expiration_date : null;
-    }).catch(() => {}))).then(() => renderLocationItems(stocked));
-  }).catch(e => toast('加载数据失败: ' + e.message, 'error'));
+    }).catch(() => { i._batches = []; }))).then(() => {
+      renderOverview(stocked);
+      renderLocationItems(stocked);
+    });
+  }).catch(e => {
+    document.getElementById('overviewMetrics').innerHTML = '';
+    document.getElementById('locationItemsContent').innerHTML = statePanel(icons.alert, '库存数据加载失败', '请检查服务连接后重试。', '<button type="button" class="btn btn-outline" onclick="loadLocationItems()">重新加载</button>');
+    toast('加载数据失败: ' + e.message, 'error');
+  });
 }
 
 function toggleMovements(itemId) {
   const existing = document.getElementById('mov-row-' + itemId);
+  const button = document.querySelector(`[aria-controls="mov-row-${itemId}"]`);
   if (existing) {
     existing.remove();
+    if (button) { button.setAttribute('aria-expanded', 'false'); button.textContent = '查看详情'; }
     return;
   }
   const item = _allItems.find(i => i.id === itemId);
   if (!item) return;
   const container = document.getElementById('loc-item-' + itemId);
   if (!container) return;
+  if (button) { button.setAttribute('aria-expanded', 'true'); button.textContent = '收起详情'; }
   const div = document.createElement('div');
   div.id = 'mov-row-' + itemId;
   div.className = 'loc-batch-row';
-  div.innerHTML = '<div style="padding:8px 20px;color:var(--text-secondary);font-size:13px">加载中...</div>';
+  div.innerHTML = statePanel(icons.layers, '正在加载详情', '请稍候…');
   container.after(div);
 
   Promise.all([
     api('/api/items/' + itemId + '/movements'),
     api('/api/items/' + itemId + '/batches').catch(() => []),
   ]).then(([movements, batches]) => {
-    const typeIcon = { 'stock_in':'📥','stock_out':'📤','adjust':'📝' };
-    const typeLabel = { 'stock_in':'入库','stock_out':'出库','adjust':'盘点' };
-    let html = '';
-
+    const typeLabel = { stock_in:'入库', stock_out:'出库', adjust:'盘点' };
+    let movementHtml = '';
     if (movements && movements.length > 0) {
-      html += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);padding:8px 0 4px">最近流水</div>';
-      for (const m of movements.slice(0, 8)) {
-        const icon = typeIcon[m.type] || '●';
+      movementHtml = movements.slice(0, 8).map(m => {
         const qtyClass = m.type === 'stock_in' ? 'up' : m.type === 'stock_out' ? 'down' : 'adjust';
-        const qtyLabel = m.type === 'stock_in' ? '+' + m.change : m.type === 'stock_out' ? '-' + Math.abs(m.change) : '' + m.change;
-        html += `<div class="mov-row">
-          <div class="mov-type">${icon}</div>
-          <div class="mov-qty ${qtyClass}">${qtyLabel}</div>
-          <div class="mov-note">${esc(m.note || typeLabel[m.type] || m.type)}</div>
-          <div class="mov-time">${fmtTime(m.created_at)}</div>
-        </div>`;
-      }
-    }
+        const qtyLabel = `${m.change > 0 ? '+' : ''}${m.change}`;
+        return `<div class="mov-row"><div class="mov-type">${esc(typeLabel[m.type] || m.type)}</div><div class="mov-qty ${qtyClass}">${qtyLabel}</div><div class="mov-note">${esc(m.note || '无备注')}</div><div class="mov-time">${fmtTime(m.created_at)}</div></div>`;
+      }).join('');
+    } else movementHtml = '<div class="state-description">暂无流水记录</div>';
 
+    const today = new Date().toISOString().slice(0,10);
+    let batchHtml = '';
     if (batches && batches.length > 0) {
-      html += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);padding:8px 0 4px;margin-top:4px">批次明细</div>';
-      html += '<table class="batch-table"><thead><tr><th>剩余</th><th>到期日期</th><th>入库时间</th></tr></thead><tbody>';
-      for (const b of batches) {
-        const expClass = b.expiration_date && b.expiration_date < new Date().toISOString().slice(0,10) ? ' style="color:var(--danger)"' : '';
-        html += `<tr><td style="font-weight:600">${b.quantity}</td><td${expClass}>${b.expiration_date ? esc(b.expiration_date) : '无'}</td><td>${fmtTime(b.created_at)}</td></tr>`;
-      }
-      html += '</tbody></table>';
-    }
-
-    if (!html) {
-      html = '<div style="padding:8px 20px;color:var(--text-secondary);font-size:13px">暂无数据</div>';
-    }
-    div.innerHTML = html;
-  }).catch(e => {
-    div.innerHTML = '<div style="padding:8px 20px;color:var(--danger);font-size:13px">加载失败</div>';
-  });
+      batchHtml = `<div class="table-wrap"><table class="batch-table"><thead><tr><th class="numeric">剩余</th><th>到期日期</th><th>入库时间</th></tr></thead><tbody>${batches.map(b => `<tr><td class="numeric"><strong>${b.quantity}</strong></td><td>${b.expiration_date ? `<span class="status-pill ${b.expiration_date < today ? 'expired' : 'ok'}">${b.expiration_date < today ? '已过期 · ' : ''}${esc(b.expiration_date)}</span>` : '<span class="status-pill">无期限</span>'}</td><td>${fmtTime(b.created_at)}</td></tr>`).join('')}</tbody></table></div>`;
+    } else batchHtml = '<div class="state-description">暂无批次信息</div>';
+    div.innerHTML = `<div class="expand-grid"><section><div class="inline-section-title">最近流水</div>${movementHtml}</section><section><div class="inline-section-title">批次明细</div>${batchHtml}</section></div>`;
+  }).catch(() => { div.innerHTML = statePanel(icons.alert, '详情加载失败', '请收起后重新尝试。'); });
 }
 
 function renderLocationItems(stocked) {
   const el = document.getElementById('locationItemsContent');
   if (!stocked) stocked = _allItems.filter(i => i.quantity > 0);
   if (locations.length === 0) {
-    el.innerHTML = '<div class="empty"><div style="font-size:40px;color:var(--border);margin-bottom:8px">📍</div><p>暂无场所，请先在「位置」页面添加</p></div>';
+    el.innerHTML = statePanel(icons.pin, '还没有存放位置', '请先在管理中心创建位置。', '<button type="button" class="btn btn-primary" onclick="switchPage(\'manage\');switchManageTab(\'locations\')">创建位置</button>');
     return;
   }
+  if (stocked.length === 0) {
+    const hasItems = _allItems.length > 0;
+    el.innerHTML = statePanel(icons.empty, hasItems ? '当前没有库存' : '还没有物品', hasItems ? '所有物品库存均为 0，可前往物品管理执行入库。' : '创建物品后即可开始记录库存。', '<button type="button" class="btn btn-primary" onclick="switchPage(\'manage\');switchManageTab(\'items\')">前往物品管理</button>');
+    return;
+  }
+  const today = new Date().toISOString().slice(0,10);
   let html = '';
   for (const loc of locations) {
-    const items = stocked.filter(i => i.location === loc.name);
-    html += `<div class="card loc-card">
-      <div class="card-header">${esc(loc.name)} <span style="font-weight:400;font-size:13px;color:var(--text-secondary)">${items.length} 项</span></div>`;
-    if (items.length === 0) {
-      html += '<div style="padding:22px 20px;color:var(--text-secondary);font-size:14px">暂无有库存物品</div></div>';
+    const locItems = stocked.filter(i => i.location === loc.name);
+    const locTotal = locItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    html += `<section class="card loc-card"><div class="card-header"><div class="card-title-group"><span class="location-icon">${icons.pin}</span><div class="loc-header-copy"><div class="loc-header-title">${esc(loc.name)}</div><div class="card-meta">${locItems.length} 种物品 · 共 ${locTotal} 件</div></div></div></div>`;
+    if (locItems.length === 0) {
+      html += '<div class="state-panel"><div class="state-description">此位置暂无有库存物品</div></div></section>';
       continue;
     }
-    for (const item of items) {
-      const expLabel = item._nearestExp ? item._nearestExp : '-';
-      const expClass = item._nearestExp && item._nearestExp < new Date().toISOString().slice(0,10) ? 'expired' : '';
+    for (const item of locItems) {
+      const expired = item._nearestExp && item._nearestExp < today;
+      const expLabel = item._nearestExp ? `${expired ? '已过期 · ' : ''}${esc(item._nearestExp)}` : '无到期日';
       html += `<div class="loc-item-row" id="loc-item-${item.id}">
-        <div class="loc-item-name">${esc(item.name)}<div class="loc-item-meta">${esc(item.category || '未分类')} · ${item._batches ? item._batches.length : 0} 个批次</div></div>
-        <div class="loc-item-exp ${expClass}">${expLabel}</div>
-        <div class="loc-item-qty">${item.quantity}</div>
-        <div class="loc-item-actions">
-          <button class="btn btn-outline btn-sm" onclick="toggleMovements(${item.id})">流水</button>
-          <button class="btn btn-success btn-sm" onclick="showStockIn(${item.id})">入库</button>
-          <button class="btn btn-warning btn-sm" onclick="showStockOut(${item.id})">出库</button>
-        </div>
+        <div class="loc-item-name"><div class="loc-item-title">${esc(item.name)}</div><div class="loc-item-meta">${esc(item.category || '未分类')} · ${(item._batches || []).length} 个批次</div></div>
+        <div class="loc-item-exp"><span class="status-pill ${expired ? 'expired' : item._nearestExp ? 'ok' : ''}">${expLabel}</span></div>
+        <div class="loc-item-qty"><small>库存</small>${item.quantity}</div>
+        <div class="loc-item-actions"><button type="button" class="btn btn-ghost btn-sm" aria-expanded="false" aria-controls="mov-row-${item.id}" onclick="toggleMovements(${item.id})">查看详情</button><button type="button" class="btn btn-success btn-sm" onclick="showStockIn(${item.id})">入库</button><button type="button" class="btn btn-warning btn-sm" onclick="showStockOut(${item.id})">出库</button></div>
       </div>`;
     }
-    html += '</div>';
-  }
-  if (!html) {
-    el.innerHTML = '<div class="empty"><div style="font-size:40px;color:var(--border);margin-bottom:8px">📦</div><p>所有场所均无库存物品</p></div>';
-    return;
+    html += '</section>';
   }
   el.innerHTML = html;
 }
@@ -1133,11 +1106,69 @@ function submitName() {
     .finally(() => btn.disabled = false);
 }
 
+function loadSettings() {
+  const url = getBaseUrl();
+  document.getElementById('settingsUrl').value = url;
+  const key = getApiKey();
+  if (key) {
+    document.getElementById('settingsKey').value = key.replace(/./g, '•');
+    document.getElementById('settingsKey').dataset.masked = key;
+  }
+}
+
+function saveSettings() {
+  const url = document.getElementById('settingsUrl').value.trim();
+  const keyInput = document.getElementById('settingsKey');
+  const key = keyInput.dataset.masked || keyInput.value.trim();
+  if (!url) { toast('请输入服务 URL', 'error'); return; }
+  localStorage.setItem('stow_api_url', url);
+  localStorage.setItem('stow_api_key', key);
+  toast('设置已保存');
+  checkHealth();
+}
+
+document.getElementById('settingsKey').addEventListener('focus', function() {
+  if (this.dataset.masked) {
+    this.value = this.dataset.masked;
+    this.dataset.masked = '';
+  }
+});
+document.getElementById('settingsKey').addEventListener('blur', function() {
+  if (this.value && !this.dataset.masked) {
+    this.dataset.masked = this.value;
+    this.value = this.value.replace(/./g, '•');
+  }
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('mousedown', event => {
+    if (event.target === overlay) closeModal(overlay.id);
+  });
+});
+
+document.addEventListener('keydown', event => {
+  const activeModal = document.querySelector('.modal-overlay.active');
+  if (!activeModal) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeModal(activeModal.id);
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const focusable = [...activeModal.querySelectorAll('button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')];
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
+
 checkHealth();
 loadLocationItems();
 loadItems();
 loadCategories();
 loadLocations();
+loadSettings();
 </script>
 </body>
 </html>
